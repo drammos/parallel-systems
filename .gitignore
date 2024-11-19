@@ -36,6 +36,11 @@
 *.x86_64
 *.hex
 
+# Exclude executable files without extensions
+# Ignore all files without extensions created during build
+main  # Add specific targets if known (e.g., `main`, `test`)
+build/*  # Exclude files in build directories
+
 # Debug files
 *.dSYM/
 *.su
