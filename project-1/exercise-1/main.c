@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    long long int numberOfThreads = strtoll(argv[2], &endptr2, 10);
+    int numberOfThreads = strtoll(argv[2], &endptr2, 10);
     if (errno != 0) {
         perror("strtoll");
         return 1;
@@ -42,8 +42,9 @@ int main(int argc, char* argv[])
     }
 
 
-    printf("Number Of Castings: %lld\nNumberOfThreads: %lld\n", numberOfCastings, numberOfThreads);
+    printf("Number Of Castings: %lld\nNumberOfThreads: %d\n", numberOfCastings, numberOfThreads);
     serialAlgo(numberOfCastings);
+    parallelAlgo(numberOfCastings, numberOfThreads);
 }
 
 
@@ -69,9 +70,23 @@ void serialAlgo(long long int numberOfCastings)
     // Prints
     printf("the Arrow circle is: %d\n", arrow_circle);
     printf("the p is: %.15f\n", p);
-    printf("The time for serial algorithm is: %f\n", ((double) (end - start)) / CLOCKS_PER_SEC);
+    printf("The time for Serial algorithm is: %f\n", ((double) (end - start)) / CLOCKS_PER_SEC);
 }
 
+
+void parallelAlgo(long long int numberOfCastings, int numberOfThreads)
+{
+    clock_t start, end;
+    start = clock();
+    srand(time(NULL));
+
+    //Code for parallel
+
+    //
+
+    end = clock();
+    printf("The time for Parallel algorithm is: %f\n", ((double) (end - start)) / CLOCKS_PER_SEC);
+}
 
 //////////////////////////////////////////////
 //                                          //
