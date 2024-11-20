@@ -14,7 +14,7 @@ OBJS = main.o
 EXEC = main
 
 # parameters
-ARGS = 1111 1000110
+ARGS = 1000000000 1000110
 
 $(EXEC) $(EXEC1): $(OBJS) $(INCL)
 	gcc -lpthread -pthread $(OBJS) -o $(EXEC)

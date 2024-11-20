@@ -43,7 +43,36 @@ int main(int argc, char* argv[])
 
 
     printf("first parameter: %lld, second parameter: %lld\n", numberOfCastings, numberOfThreads);
+    serialAlgo(numberOfCastings, numberOfThreads);
 }
+
+
+void serialAlgo(long long int numberOfCastings, long long int numberOfThreads)
+{   
+    clock_t start, end;
+    start = clock();
+    srand(time(NULL));
+    long long int arrow_circle = 0;
+    for(long long int arrow = 0; arrow < numberOfCastings; arrow++)
+    {
+        double x = ((double)rand() / RAND_MAX) * 2 - 1;
+        double y = ((double)rand() / RAND_MAX) * 2 - 1;
+        double distanse_square = x*x + y*y;
+        if( distanse_square <=1 ){
+            arrow_circle++;
+        }
+    }
+    
+    double p = 4*arrow_circle/(numberOfCastings);
+    end = clock();
+
+    // Prints
+    printf("the arrow circle is: %d\n", arrow_circle);
+    printf("the p is: %.15f\n", p);
+    printf("The time for serial algorithm is: %f\n", ((double) (end - start)) / CLOCKS_PER_SEC);
+}
+
+
 //////////////////////////////////////////////
 //                                          //
 //                  END                     //  
