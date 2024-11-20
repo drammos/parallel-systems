@@ -8,7 +8,7 @@
 
 int main(int argc, char* argv[])
 {   
-    printf("hello worrld\n");
+    printf("In main Function\n");
 
     if( argc != 3)
     {
@@ -42,12 +42,12 @@ int main(int argc, char* argv[])
     }
 
 
-    printf("first parameter: %lld, second parameter: %lld\n", numberOfCastings, numberOfThreads);
-    serialAlgo(numberOfCastings, numberOfThreads);
+    printf("Number Of Castings: %lld\nNumberOfThreads: %lld\n", numberOfCastings, numberOfThreads);
+    serialAlgo(numberOfCastings);
 }
 
 
-void serialAlgo(long long int numberOfCastings, long long int numberOfThreads)
+void serialAlgo(long long int numberOfCastings)
 {   
     clock_t start, end;
     start = clock();
@@ -67,7 +67,7 @@ void serialAlgo(long long int numberOfCastings, long long int numberOfThreads)
     end = clock();
 
     // Prints
-    printf("the arrow circle is: %d\n", arrow_circle);
+    printf("the Arrow circle is: %d\n", arrow_circle);
     printf("the p is: %.15f\n", p);
     printf("The time for serial algorithm is: %f\n", ((double) (end - start)) / CLOCKS_PER_SEC);
 }
