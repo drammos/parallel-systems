@@ -5,6 +5,8 @@
 //////////////////////////////////////////////
 
 #include "includes.h"
+void parallel_algorithm(long long int numberOfCastings, int numberOfThreads);
+void serial_algorithm(long long int numberOfCastings);
 
 int main(int argc, char* argv[])
 {   
@@ -43,12 +45,12 @@ int main(int argc, char* argv[])
 
 
     printf("Number Of Castings: %lld\nNumberOfThreads: %d\n", numberOfCastings, numberOfThreads);
-    serialAlgo(numberOfCastings);
-    parallelAlgo(numberOfCastings, numberOfThreads);
+    serial_algorithm(numberOfCastings);
+    parallel_algorithm(numberOfCastings, numberOfThreads);
 }
 
 
-void serialAlgo(long long int numberOfCastings)
+void serial_algorithm(long long int numberOfCastings)
 {   
     clock_t start, end;
     start = clock();
@@ -68,10 +70,11 @@ void serialAlgo(long long int numberOfCastings)
     end = clock();
 
     // Prints
-    printf("the Arrow circle is: %d\n", arrow_circle);
+    printf("the Arrow circle is: %lld\n", arrow_circle);
     printf("the p is: %.15f\n", p);
     printf("The time for Serial algorithm is: %f\n\n\n", ((double) (end - start)) / CLOCKS_PER_SEC);
 }
+
 typedef struct {
     long long int start;
     long long int end;
@@ -81,7 +84,7 @@ typedef struct {
 int thread_count;
 long long int total_arrow_circle = 0;
 
-void Algo(void* input)
+void monte_carlo(void* input)
 {
     ThreadData* thread = (ThreadData*)input;
     // printf("I am in %d thread from %d threads\n", thread->thread_id, thread_count);
@@ -103,14 +106,11 @@ void Algo(void* input)
 
 
 
-
-
-void parallelAlgo(long long int numberOfCastings, int numberOfThreads)
+void parallel_algorithm(long long int numberOfCastings, int numberOfThreads)
 {
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
     //Code for parallel
-    long thread;
     pthread_t* thread_handles;
     ThreadData thread_data[numberOfThreads];
 
@@ -133,7 +133,7 @@ void parallelAlgo(long long int numberOfCastings, int numberOfThreads)
             thread_data[t].end += remainder;
         }
         thread_data[t].thread_id = t;
-        pthread_create(&thread_handles[t], NULL, Algo, &thread_data[t]);
+        pthread_create(&thread_handles[t], NULL, (void*)monte_carlo, &thread_data[t]);
     }
 
     //Join with pthreads
