@@ -8,16 +8,16 @@ CFLAGS = -Wall -no-pie -fPIE -g -I$(INCLUDE)
 
 # Αρχεία .o
 INCL = $(INCLUDE)/includes.h 
-OBJS = main.o 
+OBJS = program.o 
 
 # the executable program
-EXEC = main
+EXEC = program
 
 # parameters
 ARGS = 1000000000 8
 
 $(EXEC) $(EXEC1): $(OBJS) $(INCL)
-	gcc -lpthread -pthread $(OBJS) -o $(EXEC)
+	gcc -lpthread -pthread $(OBJS) -o $(EXEC) -lrt
 
 clean:
 	rm -f $(OBJS) $(EXEC) $(OBJS1) $(EXEC1)
