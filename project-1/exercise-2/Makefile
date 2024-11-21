@@ -8,13 +8,13 @@ CFLAGS = -Wall -no-pie -fPIE -g -I$(INCLUDE)
 
 # Αρχεία .o
 INCL = $(INCLUDE)/includes.h 
-OBJS = main.o 
+OBJS = program.o 
 
 # the executable program
-EXEC = main
+EXEC = program
 
 # parameters
-ARGS = 10 10
+ARGS = 10000 10
 
 $(EXEC) $(EXEC1): $(OBJS) $(INCL)
 	gcc -lpthread -pthread $(OBJS) -o $(EXEC)
