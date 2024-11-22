@@ -79,10 +79,10 @@ void algorithm_with_mutex(void* input)
 void algorithm_with_atomic(void* input)
 {
     ThreadData* thread = (ThreadData*)input;
-    printf("I am in %d thread from %d threads for rep: %lld\n", thread->thread_id, thread_count, thread->repetititons);
+    // printf("I am in %d thread from %d threads for rep: %lld\n", thread->thread_id, thread_count, thread->repetititons);
     for(long long int i = 0; i < thread->repetititons; i++)
     {
-        atomic_global_price++;
+        __atomic_add_fetch(&atomic_global_price, 1, __ATOMIC_SEQ_CST);
     }
 }
 
@@ -122,7 +122,7 @@ void mutex_solution(long long int numberOfRepetititons, int numberOfThreads)
                           (end.tv_nsec - start.tv_nsec) / 1e9;
     
     printf("The global_price is: %lld\n", mutex_global_price);
-    printf("The time for first way is: %f\n", elapsed_time);
+    printf("The time for Mutex Solution is: %f\n\n", elapsed_time);
 }
 
 void atomic_solution(long long int numberOfRepetititons, int numberOfThreads)
@@ -155,7 +155,7 @@ void atomic_solution(long long int numberOfRepetititons, int numberOfThreads)
                           (end.tv_nsec - start.tv_nsec) / 1e9;
 
     printf("The global_price is: %lld\n", atomic_global_price);
-    printf("The time for second way is: %f\n", elapsed_time);
+    printf("The time for Atomic Solution is: %f\n", elapsed_time);
 }
 
 //////////////////////////////////////////////
