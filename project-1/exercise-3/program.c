@@ -12,7 +12,7 @@ typedef struct {
 } ThreadData;
 
 int thread_count;
-int* shared_table;
+long long int* shared_table;
 void solution(long long int numberOfRepetitions, int numberOfThreads);
 
 int main(int argc, char* argv[])
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
 
     printf("Number Of Repetitions: %lld\nNumberOfThreads: %d\n", numberOfRepetitions, numberOfThreads);
-    shared_table = malloc(numberOfThreads*sizeof(int));
+    shared_table = malloc(numberOfThreads*sizeof(long long int*));
     for(int i = 0; i < numberOfThreads; i++)
     {
         shared_table[i] = 0;
@@ -63,8 +63,7 @@ void algorithm(void* input)
     ThreadData* thread = (ThreadData*)input;
     for(long long int i = 0; i < thread->repetititons; i++)
     {
-        shared_table[i] += 1;
-        // Please complet it
+        shared_table[thread->thread_id] += 1;
     }
 }
 
@@ -100,6 +99,18 @@ void solution(long long int numberOfRepetitions, int numberOfThreads)
     double elapsed_time = (end.tv_sec - start.tv_sec) + 
                           (end.tv_nsec - start.tv_nsec) / 1e9;
     
+    printf("\nThe values from Shared_Table is: [");
+    long long int sum = 0;
+    for(int i = 0; i < numberOfThreads; i++)
+    {   
+        if(i == numberOfThreads - 1)
+            printf(" %lld]\n", shared_table[i]);
+        else
+            printf(" %lld,", shared_table[i]);
+
+        sum += shared_table[i];
+    }
+    printf("\nThe sum is: %lld\n", sum);
     printf("The time for Solution is: %f\n\n", elapsed_time);
 }
 
