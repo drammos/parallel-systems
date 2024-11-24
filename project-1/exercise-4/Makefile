@@ -1,5 +1,5 @@
 # paths
-# MODULES = ../modules
+MODULES = ../module
 INCLUDE = ../include
 FILES = ../Input
 
@@ -8,13 +8,13 @@ CFLAGS = -Wall -no-pie -fPIE -g -I$(INCLUDE)
 
 # Αρχεία .o
 INCL = $(INCLUDE)/includes.h 
-OBJS = main.o 
+OBJS = program.o $(MODULES)/my_rand.o
 
 # the executable program
-EXEC = main
+EXEC = program
 
 # parameters
-ARGS = 10 10
+ARGS = 5 3
 
 $(EXEC) $(EXEC1): $(OBJS) $(INCL)
 	gcc -lpthread -pthread $(OBJS) -o $(EXEC)
