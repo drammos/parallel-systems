@@ -63,7 +63,7 @@ void algorithm(void* input)
     ThreadData* thread = (ThreadData*)input;
     for(long long int i = 0; i < thread->repetititons; i++)
     {
-        shared_table[thread->thread_id] += 1;
+        shared_table[thread->thread_id]++;
     }
 }
 
