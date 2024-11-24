@@ -67,7 +67,6 @@ int main(int argc, char* argv[])
 void algorithm_with_mutex(void* input)
 {   
     ThreadData* thread = (ThreadData*)input;
-    // printf("I am in %d thread from %d threads for rep: %lld\n", thread->thread_id, thread_count, thread->repetititons);
     for(long long int i = 0; i < thread->repetititons; i++)
     {
         pthread_mutex_lock(&mutex);
@@ -79,7 +78,6 @@ void algorithm_with_mutex(void* input)
 void algorithm_with_atomic(void* input)
 {
     ThreadData* thread = (ThreadData*)input;
-    // printf("I am in %d thread from %d threads for rep: %lld\n", thread->thread_id, thread_count, thread->repetititons);
     for(long long int i = 0; i < thread->repetititons; i++)
     {
         __atomic_add_fetch(&atomic_global_price, 1, __ATOMIC_SEQ_CST);
