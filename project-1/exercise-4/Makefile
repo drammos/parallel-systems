@@ -8,10 +8,10 @@ CFLAGS = -Wall -no-pie -fPIE -g -I$(INCLUDE)
 
 # Αρχεία .o
 INCL = $(INCLUDE)/includes.h 
-OBJS = main.o $(MODULES)/my_rand.o
+OBJS = program.o $(MODULES)/my_rand.o
 
 # the executable program
-EXEC = main
+EXEC = program
 
 # parameters
 ARGS = 10
