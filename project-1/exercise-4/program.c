@@ -74,8 +74,8 @@ void        Usage(char* prog_name);
 void        Get_input(int* inserts_in_main_p);
 
 /* Thread function */
-void*       Thread_work(void* rank);
-void*       Thread_work_2(void* rank);
+void*       Readers_priority(void* rank);
+void*       Writers_priority(void* rank);
 
 /* List operations */
 int         Insert(int value);
@@ -128,7 +128,7 @@ void solution_with_readers_priority(int inserts_in_main)
 
    GET_TIME(start);
    for (i = 0; i < thread_count; i++)
-      pthread_create(&thread_handles[i], NULL, Thread_work, (void*) i);
+      pthread_create(&thread_handles[i], NULL, Readers_priority, (void*) i);
 
    for (i = 0; i < thread_count; i++)
       pthread_join(thread_handles[i], NULL);
@@ -197,7 +197,7 @@ void solution_with_writers_priority(int inserts_in_main)
 
    GET_TIME(start);
    for (i = 0; i < thread_count; i++)
-      pthread_create(&thread_handles[i], NULL, Thread_work_2, (void*) i);
+      pthread_create(&thread_handles[i], NULL, Writers_priority, (void*) i);
 
    for (i = 0; i < thread_count; i++)
       pthread_join(thread_handles[i], NULL);
@@ -397,7 +397,7 @@ int  Is_empty(void) {
 }  /* Is_empty */
 
 /*-----------------------------------------------------------------*/
-void* Thread_work(void* rank) {
+void* Readers_priority(void* rank) {
    long my_rank = (long) rank;
    int i, val;
    double which_op;
@@ -411,7 +411,6 @@ void* Thread_work(void* rank) {
       // Reader - MEMBER
       if (which_op < search_percent) 
       {
-         
          pthread_mutex_lock(&state->mutex);
          
          state->reader_threads_waiting++;
@@ -419,7 +418,6 @@ void* Thread_work(void* rank) {
          {
             pthread_cond_wait(&state->readers_cond, &state->mutex);
          }
-         
          state->reader_threads_waiting--;
          state->reader_threads_reading++;
          
@@ -434,15 +432,11 @@ void* Thread_work(void* rank) {
             pthread_cond_signal(&state->writers_cond);
          } 
          pthread_mutex_unlock(&state->mutex);
-
-
          my_member_count++;
-      
       }
       // Writer - INSERT
       else if (which_op < search_percent + insert_percent) 
       {
-         
          pthread_mutex_lock(&state->mutex);
          
          state->writers_threads_waiting++;
@@ -458,8 +452,7 @@ void* Thread_work(void* rank) {
          Insert(val);
 
          pthread_mutex_lock(&state->mutex);
-         state->writer_thread_writing--;
-         
+         state->writer_thread_writing--;  
          if(state->reader_threads_waiting>0)
          {
             pthread_cond_broadcast(&state->readers_cond);
@@ -468,10 +461,7 @@ void* Thread_work(void* rank) {
          {
             pthread_cond_signal(&state->writers_cond);
          }
-
-
          pthread_mutex_unlock(&state->mutex);
-
 
          my_insert_count++;
       }
@@ -520,7 +510,7 @@ void* Thread_work(void* rank) {
    return NULL;
 }  /* Thread_work */
 
-void* Thread_work_2(void* rank) {
+void* Writers_priority(void* rank) {
    long my_rank = (long) rank;
    int i, val;
    double which_op;
@@ -552,7 +542,7 @@ void* Thread_work_2(void* rank) {
 
          pthread_mutex_lock(&state->mutex);
          state->reader_threads_reading--;
-         if(state->reader_threads_reading==0)
+         if(state->reader_threads_reading ==0 && state->writers_threads_waiting > 0)
          {
             pthread_cond_signal(&state->writers_cond);
          } 
