@@ -8,10 +8,10 @@ CFLAGS = -Wall -no-pie -fPIE -g -I$(INCLUDE)
 
 # Αρχεία .o
 INCL = $(INCLUDE)/includes.h 
-OBJS = main.o 
+OBJS = program1.o 
 
 # the executable program
-EXEC = main
+EXEC = program1
 
 # parameters
 ARGS = 10 10
