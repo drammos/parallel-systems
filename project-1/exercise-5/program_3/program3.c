@@ -25,6 +25,7 @@ typedef struct{
 Thread_Barrier barrier;
 
 
+void Thread_Work(void* input);
 
 int main(int argc, char* argv[])
 {   
@@ -59,14 +60,33 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-
+    thread_barrier_init(&barrier);
     printf("Number Of Repetitions: %lld\nNumberOfThreads: %d\n", number_of_repetitions, thread_count);
-    solution();
+
+
+    // solution();
+    pthread_t thread_handles[thread_count];
+
+
+    // Create pthreads
+    for(int t = 0; t < thread_count; t++)
+    {
+        pthread_create(&thread_handles[t], NULL, Thread_Work, NULL);
+    }
+
+    // Join all pthreads
+    for(int t = 0; t < thread_count; t++)
+    {
+        pthread_join(thread_handles[t], NULL);
+    }
+
+    thread_barrier_destroy(&barrier);
 }
 
 void thread_barrier_init(Thread_Barrier *barrier)
 {
     pthread_mutex_init(&(barrier->lock), NULL);
+    barrier->thread_barrier_number = thread_count;
     barrier->total_thread = 0;
 }
 
@@ -80,9 +100,8 @@ void thread_barrier_wait(Thread_Barrier *barrier){
         barrier->total_thread += 1;
         pthread_mutex_unlock(&(barrier->lock));
     }
+    while (barrier->total_thread < barrier->thread_barrier_number);
 
-    while (barrier->total_thread < thread_count);
-    
     if(!pthread_mutex_lock(&(barrier->lock))){
         barrier->total_thread -= 1;
         pthread_mutex_unlock(&(barrier->lock));
@@ -91,39 +110,12 @@ void thread_barrier_wait(Thread_Barrier *barrier){
 
 void Thread_Work(void* input)
 {   
-    thread_barrier_wait(&barrier);
+    for(long long int i = 0; i < number_of_repetitions; i++)
+    {
+        thread_barrier_wait(&barrier);
+    }
 }
 
-void solution()
-{   
-    struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    thread_barrier_init(&barrier);
-
-    pthread_t* thread_handles;
-
-    thread_handles = malloc(thread_count*sizeof(pthread_t));
-
-    // Create pthreads
-    for(int t = 0; t < thread_count; t++)
-    {
-        pthread_create(&thread_handles[t], NULL, (void*)Thread_Work, t);
-    }
-
-    // Join all pthreads
-    for(int t = 0; t < thread_count; t++)
-    {
-        pthread_join(thread_handles[t], NULL);
-    }
-
-    thread_barrier_destroy(&barrier);
-    free(thread_handles);
-    clock_gettime(CLOCK_MONOTONIC, &end); 
-    double elapsed_time = (end.tv_sec - start.tv_sec) + 
-                          (end.tv_nsec - start.tv_nsec) / 1e9;
-    
-    printf("The time for Solution is: %f\n\n", elapsed_time);
-}
 
 //////////////////////////////////////////////
 //                                          //

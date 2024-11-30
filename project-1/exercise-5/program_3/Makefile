@@ -14,7 +14,7 @@ OBJS = program3.o
 EXEC = program3
 
 # parameters
-ARGS = 10 10
+ARGS = 1 3
 
 $(EXEC) $(EXEC1): $(OBJS) $(INCL)
 	gcc -lpthread -pthread $(OBJS) -o $(EXEC)
