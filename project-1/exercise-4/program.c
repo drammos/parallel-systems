@@ -148,7 +148,6 @@ void solution_with_readers_priority(int inserts_in_main)
    Free_list();
    pthread_mutex_destroy(&state->mutex);
    pthread_cond_destroy(&state->readers_cond);
-   pthread_cond_destroy(&state->writer_thread_writing);
    free(state);
 
    free(thread_handles);
@@ -217,7 +216,7 @@ void solution_with_writers_priority(int inserts_in_main)
    Free_list();
    pthread_mutex_destroy(&state->mutex);
    pthread_cond_destroy(&state->readers_cond);
-   pthread_cond_destroy(&state->writer_thread_writing);
+   pthread_cond_destroy(&state->writers_cond);
    free(state);
 
    free(thread_handles);
@@ -396,6 +395,74 @@ int  Is_empty(void) {
       return 0;
 }  /* Is_empty */
 
+void Reader_lock()
+{
+   pthread_mutex_lock(&state->mutex);
+   state->reader_threads_waiting++;
+   while(state->writer_thread_writing>0)
+   {
+      pthread_cond_wait(&state->readers_cond, &state->mutex);
+   }
+   state->reader_threads_waiting--;
+   state->reader_threads_reading++;
+   pthread_mutex_unlock(&state->mutex);
+}
+
+void Reader_unlock()
+{
+   pthread_mutex_lock(&state->mutex);
+   state->reader_threads_reading--;
+   if(state->reader_threads_reading==0 && state->writers_threads_waiting>0)
+   {
+      pthread_cond_signal(&state->writers_cond);
+   } 
+   pthread_mutex_unlock(&state->mutex);
+}
+
+void Writer_lock()
+{
+   pthread_mutex_lock(&state->mutex);
+   state->writers_threads_waiting++;
+   while(state->writer_thread_writing + state->reader_threads_reading > 0)
+   {
+      pthread_cond_wait(&state->writers_cond, &state->mutex);
+   }
+
+   state->writers_threads_waiting--;
+   state->writer_thread_writing++;
+   pthread_mutex_unlock(&state->mutex);
+}
+
+void Writer_unlock_with_readers_priority()
+{
+   pthread_mutex_lock(&state->mutex);
+   state->writer_thread_writing--;  
+   if(state->reader_threads_waiting>0)
+   {
+      pthread_cond_broadcast(&state->readers_cond);
+   }
+   else if(state->writers_threads_waiting>0)
+   {
+      pthread_cond_signal(&state->writers_cond);
+   }
+   pthread_mutex_unlock(&state->mutex);
+}
+
+void Writer_unlock_with_writers_priority()
+{
+   pthread_mutex_lock(&state->mutex);
+   state->writer_thread_writing--; 
+   if(state->writers_threads_waiting>0)
+   {
+      pthread_cond_signal(&state->writers_cond);
+   }
+   else if(state->reader_threads_waiting>0)
+   {
+      pthread_cond_broadcast(&state->readers_cond);
+   }
+   pthread_mutex_unlock(&state->mutex);
+}
+
 /*-----------------------------------------------------------------*/
 void* Readers_priority(void* rank) {
    long my_rank = (long) rank;
@@ -411,91 +478,27 @@ void* Readers_priority(void* rank) {
       // Reader - MEMBER
       if (which_op < search_percent) 
       {
-         pthread_mutex_lock(&state->mutex);
-         
-         state->reader_threads_waiting++;
-         while(state->writer_thread_writing>0)
-         {
-            pthread_cond_wait(&state->readers_cond, &state->mutex);
-         }
-         state->reader_threads_waiting--;
-         state->reader_threads_reading++;
-         
-         pthread_mutex_unlock(&state->mutex);
-         
+         Reader_lock();
          Member(val);
+         Reader_unlock();
 
-         pthread_mutex_lock(&state->mutex);
-         state->reader_threads_reading--;
-         if(state->reader_threads_reading==0 && state->writers_threads_waiting>0)
-         {
-            pthread_cond_signal(&state->writers_cond);
-         } 
-         pthread_mutex_unlock(&state->mutex);
          my_member_count++;
       }
       // Writer - INSERT
       else if (which_op < search_percent + insert_percent) 
       {
-         pthread_mutex_lock(&state->mutex);
-         
-         state->writers_threads_waiting++;
-         while(state->writer_thread_writing + state->reader_threads_reading > 0)
-         {
-            pthread_cond_wait(&state->writers_cond, &state->mutex);
-         }
-
-         state->writers_threads_waiting--;
-         state->writer_thread_writing++;
-         pthread_mutex_unlock(&state->mutex);
-
+         Writer_lock();
          Insert(val);
-
-         pthread_mutex_lock(&state->mutex);
-         state->writer_thread_writing--;  
-         if(state->reader_threads_waiting>0)
-         {
-            pthread_cond_broadcast(&state->readers_cond);
-         }
-         else if(state->writers_threads_waiting>0)
-         {
-            pthread_cond_signal(&state->writers_cond);
-         }
-         pthread_mutex_unlock(&state->mutex);
+         Writer_unlock_with_readers_priority();
 
          my_insert_count++;
       }
       // Writer  - DELETE
       else 
       {
-         pthread_mutex_lock(&state->mutex);
-         
-         state->writers_threads_waiting++;
-         while(state->writer_thread_writing + state->reader_threads_reading > 0)
-         {
-            pthread_cond_wait(&state->writers_cond, &state->mutex);
-         }
-
-         state->writers_threads_waiting--;
-         state->writer_thread_writing++;
-         pthread_mutex_unlock(&state->mutex);
-
+         Writer_lock();
          Delete(val);
-
-         pthread_mutex_lock(&state->mutex);
-         state->writer_thread_writing--;
-         
-         if(state->reader_threads_waiting>0)
-         {
-            pthread_cond_broadcast(&state->readers_cond);
-         }
-         else if(state->writers_threads_waiting>0)
-         {
-            pthread_cond_signal(&state->writers_cond);
-         }
-
-
-         pthread_mutex_unlock(&state->mutex);
+         Writer_unlock_with_readers_priority();
          
          my_delete_count++;
       }
@@ -525,100 +528,27 @@ void* Writers_priority(void* rank) {
       if (which_op < search_percent) 
       {
          
-         pthread_mutex_lock(&state->mutex);
-         
-         state->reader_threads_waiting++;
-         while(state->writer_thread_writing>0)
-         {
-            pthread_cond_wait(&state->readers_cond, &state->mutex);
-         }
-         
-         state->reader_threads_waiting--;
-         state->reader_threads_reading++;
-         
-         pthread_mutex_unlock(&state->mutex);
-         
+         Reader_lock();
          Member(val);
-
-         pthread_mutex_lock(&state->mutex);
-         state->reader_threads_reading--;
-         if(state->reader_threads_reading ==0 && state->writers_threads_waiting > 0)
-         {
-            pthread_cond_signal(&state->writers_cond);
-         } 
-         pthread_mutex_unlock(&state->mutex);
-
+         Reader_unlock();
 
          my_member_count++;
-      
       }
       // Writer - INSERT
       else if (which_op < search_percent + insert_percent) 
       {
-         
-         pthread_mutex_lock(&state->mutex);
-         
-         state->writers_threads_waiting++;
-         while(state->writer_thread_writing + state->reader_threads_reading > 0)
-         {
-            pthread_cond_wait(&state->writers_cond, &state->mutex);
-         }
-
-         state->writers_threads_waiting--;
-         state->writer_thread_writing++;
-         pthread_mutex_unlock(&state->mutex);
-
+         Writer_lock();
          Insert(val);
-
-         pthread_mutex_lock(&state->mutex);
-         state->writer_thread_writing--;
-         
-         if(state->writers_threads_waiting>0)
-         {
-            pthread_cond_signal(&state->writers_cond);
-         }
-         else if(state->reader_threads_waiting>0)
-         {
-            pthread_cond_broadcast(&state->readers_cond);
-         }
-
-
-         pthread_mutex_unlock(&state->mutex);
-
+         Writer_unlock_with_writers_priority();
 
          my_insert_count++;
       }
       // Writer  - DELETE
       else 
       {
-         pthread_mutex_lock(&state->mutex);
-         
-         state->writers_threads_waiting++;
-         while(state->writer_thread_writing + state->reader_threads_reading > 0)
-         {
-            pthread_cond_wait(&state->writers_cond, &state->mutex);
-         }
-
-         state->writers_threads_waiting--;
-         state->writer_thread_writing++;
-         pthread_mutex_unlock(&state->mutex);
-
+         Writer_lock();
          Delete(val);
-
-         pthread_mutex_lock(&state->mutex);
-         state->writer_thread_writing--;
-         
-         if(state->writers_threads_waiting>0)
-         {
-            pthread_cond_signal(&state->writers_cond);
-         }
-         else if(state->reader_threads_waiting>0)
-         {
-            pthread_cond_broadcast(&state->readers_cond);
-         }
-
-
-         pthread_mutex_unlock(&state->mutex);
+         Writer_unlock_with_writers_priority();
          
          my_delete_count++;
       }
