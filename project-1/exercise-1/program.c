@@ -10,8 +10,6 @@ void serial_algorithm(long long int numberOfCastings);
 
 int main(int argc, char* argv[])
 {   
-    printf("In main Function\n");
-
     if( argc != 3)
     {
         printf("WRONG INPUT FROM ARGS!!!\n");
@@ -87,8 +85,6 @@ long long int total_arrow_circle = 0;
 void monte_carlo(void* input)
 {
     ThreadData* thread = (ThreadData*)input;
-    // printf("I am in %d thread from %d threads\n", thread->thread_id, thread_count);
-    // printf("for thread: %d, start: %d, end: %d\n", thread->thread_id, thread->start, thread->end);
     long long int arrow_circle = 0;
     unsigned int seed = thread->start;
     for( long long int arrow = thread->start; arrow< thread->end; arrow++)
@@ -118,10 +114,6 @@ void parallel_algorithm(long long int numberOfCastings, int numberOfThreads)
 
     long long int chunk_size = numberOfCastings/(long long int)numberOfThreads;
     long long int remainder = numberOfCastings % (long long int)numberOfThreads;
-
-    printf("Chunk size is: %lld and remainder is: %lld\n", chunk_size, remainder);
-
-
 
     //Create pthreads
     for(int t = 0; t < thread_count; t++)
