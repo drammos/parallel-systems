@@ -1,6 +1,6 @@
 # paths
 # MODULES = ../modules
-INCLUDE = ../include
+INCLUDE = ../../include
 FILES = ../Input
 
 # Compile options. Το -I<dir> λέει στον compiler να αναζητήσει εκεί include files
