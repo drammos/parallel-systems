@@ -7,7 +7,8 @@
 #include "includes.h"
 
 typedef struct {
-    long long int repetititons;
+    long long int start;
+    long long int end;
     int thread_id;
 } ThreadData;
 
@@ -61,7 +62,7 @@ int main(int argc, char* argv[])
 void algorithm(void* input)
 {
     ThreadData* thread = (ThreadData*)input;
-    for(long long int i = 0; i < thread->repetititons; i++)
+    for(long long int i = thread->start; i< thread->end; i++)
     {
         shared_table[thread->thread_id]++;
     }
@@ -79,11 +80,18 @@ void solution(long long int numberOfRepetitions, int numberOfThreads)
 
     thread_handles = malloc(thread_count*sizeof(pthread_t));
 
+    long long int chunk_size = numberOfRepetitions/(long long int)numberOfThreads;
+    long long int remainder = numberOfRepetitions % (long long int)numberOfThreads;
+
     // Create pthreads
     for(int t = 0; t < thread_count; t++)
     {
+        thread_data[t].start = t*chunk_size;
+        thread_data[t].end = (t+1)*chunk_size;
+        if(t == numberOfThreads-1){
+            thread_data[t].end += remainder;
+        }
         thread_data[t].thread_id = t;
-        thread_data[t].repetititons = numberOfRepetitions;
         pthread_create(&thread_handles[t], NULL, (void*)algorithm, &thread_data[t]);
     }
 
