@@ -66,7 +66,7 @@ void serial_algorithm(long long int numberOfCastings)
         }
     }
     
-    double p = 4*arrow_circle/(numberOfCastings);
+    double p = (double)4*arrow_circle/(numberOfCastings);
     end = clock();
 
     // Prints
@@ -142,7 +142,7 @@ void parallel_algorithm(long long int numberOfCastings, int numberOfThreads)
         pthread_join(thread_handles[t], NULL);
     }
 
-    double p = 4*total_arrow_circle/(numberOfCastings);
+    double p = (double)4*total_arrow_circle/(numberOfCastings);
     free(thread_handles);
 
     clock_gettime(CLOCK_MONOTONIC, &end); 
