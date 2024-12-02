@@ -100,8 +100,7 @@ void monte_carlo(void* input)
             arrow_circle++;
         }
     }
-
-    total_arrow_circle += arrow_circle;
+    __atomic_add_fetch(&total_arrow_circle, arrow_circle, __ATOMIC_SEQ_CST);
 }
 
 
