@@ -1,0 +1,13 @@
+#define ERROR -1
+
+typedef enum {
+    DEAD,
+    LIVE,
+} State;
+
+
+struct cell{
+    State state;
+}typedef Cell;
+
+Cell** create_grid(int dimension);
