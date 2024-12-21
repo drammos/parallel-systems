@@ -1,20 +1,20 @@
 # paths
-# MODULES = ../modules
-INCLUDE = ../include
-FILES = ../Input
+MODULES = modules
+INCLUDE = include
+FILES = files
 
 # Compile options. Το -I<dir> λέει στον compiler να αναζητήσει εκεί include files
 CFLAGS = -Wall -no-pie -fPIE -g -I$(INCLUDE)
 
 # Αρχεία .o
-INCL = $(INCLUDE)/includes.h 
-OBJS = program.o 
+INCL = $(INCLUDE)/includes.h $(INCLUDE)/Serial.h $(INCLUDE)/Grid.h
+OBJS = program.o $(MODULES)/Serial.o $(MODULES)/Grid.o
 
 # the executable program
 EXEC = program
 
 # parameters
-ARGS = 10000 10
+ARGS = 100 10 serial 10
 
 $(EXEC) $(EXEC1): $(OBJS) $(INCL)
 	gcc -lpthread -pthread $(OBJS) -o $(EXEC) -lrt
