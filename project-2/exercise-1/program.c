@@ -4,9 +4,12 @@
 //                                          //
 //////////////////////////////////////////////
 
-#include "includes.h"
+
 #include <string.h>
+
+#include "includes.h"
 #include "Serial.h"
+#include "Parallel.h"
 
 int main(int argc, char* argv[])
 {   
@@ -63,7 +66,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        // parallel_algorithm(states, grid, numberOfThreads);
+        parellel_algorithm(states, grid, numberOfThreads);
     }
 }
 

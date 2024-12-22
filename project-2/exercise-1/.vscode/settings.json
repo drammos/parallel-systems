@@ -5,6 +5,10 @@
         "shm.h": "c",
         "string.h": "c",
         "stdint.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "limits.h": "c",
+        "grid.h": "c",
+        "parallel.h": "c",
+        "stdio.h": "c"
     }
 }
