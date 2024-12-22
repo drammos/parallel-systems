@@ -4,6 +4,7 @@
         "includes.h": "c",
         "shm.h": "c",
         "string.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "stdlib.h": "c"
     }
 }

@@ -14,7 +14,7 @@ OBJS = program.o $(MODULES)/Serial.o $(MODULES)/Grid.o
 EXEC = program
 
 # parameters
-ARGS = 100 10 serial 10
+ARGS = 100 10000 serial 10
 
 $(EXEC) $(EXEC1): $(OBJS) $(INCL)
 	gcc -lpthread -pthread $(OBJS) -o $(EXEC) -lrt
