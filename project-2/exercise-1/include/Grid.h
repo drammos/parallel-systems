@@ -11,3 +11,9 @@ struct cell{
 }typedef Cell;
 
 Cell** create_grid(int dimension);
+
+Cell** initialize_grid(int dimension);
+
+void print_grid(Cell** grid, int dimension);
+
+void free_grid(Cell** grid, int dimension);

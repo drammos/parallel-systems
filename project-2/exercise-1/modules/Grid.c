@@ -119,3 +119,29 @@ Cell** create_grid(int dimension)
     Cell** grid = initialize_grid(dimension);    
     return read_file_rle(grid, dimension);
 }
+
+void print_grid(Cell** grid, int dimension)
+{
+    printf("THE GRID\n");
+    for(int i = 0; i < dimension; i++){
+        for(int j = 0; j < dimension; j++){
+            if(grid[i][j].state == LIVE){
+                printf("|");
+            }
+            else{
+                printf(".");
+            }
+        }
+        printf("\n");
+    }
+    printf("\n");    
+}
+
+void free_grid(Cell** grid, int dimension)
+{
+    for(int i = 0; i < dimension; i++)
+    {
+        free(grid[i]);
+    }
+    free(grid);
+}
