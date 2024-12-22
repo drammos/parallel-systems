@@ -15,11 +15,11 @@
 #include <stdint.h>
 
 
-Cell** create_new_state_parallel(Cell** grid, int dimension)
+Cell** create_new_state_parallel(Cell** grid, int dimension, int threads)
 {
     Cell** new_grid_state = initialize_grid(dimension);
 
-    #pragma omp parallel for collapse(2)
+    #pragma omp parallel for num_threads(threads) collapse(2)
     for(int i = 0; i < dimension; i++)
     {
         for( int j = 0; j < dimension; j++)
@@ -71,7 +71,9 @@ void parellel_algorithm(int states, int dimension, int threads)
     // Next states
     for(int i = 1; i < states; i++)
     {
-        grid = create_new_state_parallel(grid, dimension);
+        grid = create_new_state_parallel(grid, dimension, threads);
+        // printf("The i= %d\n", i);
+        // print_grid(grid, dimension);
     }
     
 
