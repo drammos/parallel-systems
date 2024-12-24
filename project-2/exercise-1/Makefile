@@ -17,7 +17,7 @@ OBJS = program.o $(MODULES)/Serial.o $(MODULES)/Grid.o $(MODULES)/Parallel.o
 EXEC = program
 
 # Parameters for running the program
-ARGS = 100 10000 parallel 10
+ARGS = 100 10000 parallel 1000
 
 # Compilation rule for the final executable
 $(EXEC): $(OBJS) $(INCL)
