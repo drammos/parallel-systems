@@ -15,7 +15,7 @@ OBJS = program.o $(MODULES)/Serial.o $(MODULES)/Parallel.o
 EXEC = program
 
 # parameters
-ARGS = 19 serial row 10
+ARGS = 100000 serial column 10
 
 $(EXEC) $(EXEC1): $(OBJS) $(INCL)
 	gcc -lpthread -pthread $(OBJS) -o $(EXEC) $(LDFLAGS) -lrt -lm

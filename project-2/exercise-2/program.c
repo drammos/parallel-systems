@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     
     for(int i = 0; i < n; i++)
     {
-        table_a[i] = malloc(sizeof(double));
+        table_a[i] = malloc(n*sizeof(double));
     }
 
 
@@ -116,6 +116,13 @@ int main(int argc, char* argv[])
     {
         parellel_algorithm(table_a, table_b, n, backtracking_algorithm, numberOfThreads);
     }
+
+    free(table_b);
+    for(int i = 0; i < n; i++)
+    {
+        free(table_a[i]);
+    }
+    free(table_a);
 }
 
 

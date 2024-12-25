@@ -12,36 +12,29 @@
 
 #include <stdint.h>
 
-double* row_algorithm(double** table_a, double* table_b, int n) {
-    // First, add input validation
-    if (n <= 0 || table_a == NULL || table_b == NULL) {
-        return NULL;  // Return NULL if inputs are invalid
-    }
+double* row_algorithm(double** table_a, double* table_b, int n)
+{
+    printf("The n is:%d\n", n);
+    double* table_x;
+    table_x = (double*)malloc(n*sizeof(double));
 
-    // Allocate memory with error checking
-    double* table_x = NULL;
-    table_x = (double*)malloc(n * sizeof(double));
     if (table_x == NULL) {
-        // Handle allocation failure
-        return NULL;
+        fprintf(stderr, "Memory allocation failed for table_x\n");
+        exit(EXIT_FAILURE);
     }
 
-    // Initialize the allocated memory
-    for (int i = 0; i < n; i++) {
-        table_x[i] = 0.0;
-    }
-
-    // Your original computation logic
-    for (int row = n-1; row >= 0; row--) {
+    for(int row = n-1; row >= 0; row--)
+    {
         table_x[row] = table_b[row];
-        for (int col = row+1; col < n; col++) {
-            table_x[row] -= table_x[col]*table_a[row][col];
+        for(int col = row+1; col < n; col++)
+        {
+            table_x[row] -= table_a[row][col]*table_x[col];
         }
         table_x[row] /= table_a[row][row];
     }
-
     return table_x;
 }
+
 double* column_algorithm(double** table_a, double* table_b, int n)
 {
     double* table_x;
@@ -80,6 +73,7 @@ void serial_algorithm(double** table_a, double* table_b, int n, char* backtracki
     double elapsed_time = (end.tv_sec - start.tv_sec) + 
                           (end.tv_nsec - start.tv_nsec) / 1e9;
 
+    free(table_x);
     // printf("THE TABLE X:\n");
     // for(int i = 0; i < n; i++)
     // {
