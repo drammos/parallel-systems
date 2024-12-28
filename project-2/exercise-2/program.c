@@ -96,17 +96,6 @@ int main(int argc, char* argv[])
         }
         table_b[i] = rand() % 100;
     }
-
-
-    // printf("the table:\n");
-    // for(int i = 0; i < n; i++)
-    // {
-    //     for(int j = 0; j < n; j++)
-    //     {
-    //         printf("%dx%d ", table_a[i][j], j);
-    //     }
-    //     printf(": %d\n", table_b[i]);
-    // }
     
     if(!strcmp("serial", algorithm))
     {
