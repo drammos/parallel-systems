@@ -74,17 +74,6 @@ void serial_algorithm(double** table_a, double* table_b, int n, char* backtracki
                           (end.tv_nsec - start.tv_nsec) / 1e9;
 
     free(table_x);
-    // printf("THE TABLE X:\n");
-    // for(int i = 0; i < n; i++)
-    // {
-    //     if(i == n-1)
-    //     {
-    //         printf("x%d =  %d", i, table_x[i]);
-    //     }
-    //     else{
-    //         printf("x%d =  %d, ", i, table_x[i]);
-    //     }
-        
-    // }
+    
     printf("\nThe time for Serial-Solution with %s algorithm is: %f\n\n", elapsed_time, backtracking_algorithm);
 }
