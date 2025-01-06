@@ -19,32 +19,30 @@ Cell** create_new_state_parallel(Cell** grid, int dimension, int threads)
 {
     Cell** new_grid_state = initialize_grid(dimension);
 
+    int directions[8][2] = {
+        {-1, -1}, {-1, 0}, {-1, 1}, // Above
+        {0, -1},          {0, 1},  // Sides
+        {1, -1}, {1, 0}, {1, 1}    // Below
+    };
+
     #pragma omp parallel for num_threads(threads) collapse(2)
-    for(int i = 0; i < dimension; i++)
-    {
-        for( int j = 0; j < dimension; j++)
-        {
+    for (int i = 0; i < dimension; i++) {
+        for (int j = 0; j < dimension; j++) {
             int neighbours_counter = 0;
 
-            // For neighbors above the current cell
-            if (i > 0) {
-                if (j > 0 && grid[i-1][j-1].state == LIVE) neighbours_counter++;
-                if (grid[i-1][j].state == LIVE) neighbours_counter++;
-                if (j + 1 != dimension && grid[i-1][j+1].state == LIVE) neighbours_counter++;
+            for (int d = 0; d < 8; d++) {
+                int ni = i + directions[d][0];
+                int nj = j + directions[d][1];
+
+                
+                if (ni >= 0 && ni < dimension && nj >= 0 && nj < dimension) {
+                    if (grid[ni][nj].state == LIVE) {
+                        neighbours_counter++;
+                    }
+                }
             }
 
-            // For neighbors to the left and right of the current cell
-            if (j > 0 && grid[i][j-1].state == LIVE) neighbours_counter++; 
-            if (j + 1 != dimension && grid[i][j+1].state == LIVE) neighbours_counter++; 
-
-            // For neighbors below the current cell
-            if (i + 1 != dimension) {
-                if (j > 0 && grid[i+1][j-1].state == LIVE) neighbours_counter++;
-                if (grid[i+1][j].state == LIVE) neighbours_counter++;
-                if (j + 1 != dimension && grid[i+1][j+1].state == LIVE) neighbours_counter++;
-            }
-
-            // Apply the Game of Life rules
+            
             if (grid[i][j].state == LIVE && (neighbours_counter == 2 || neighbours_counter == 3)) {
                 new_grid_state[i][j].state = LIVE;
             } else if (grid[i][j].state == DEAD && neighbours_counter == 3) {

@@ -40,55 +40,28 @@ Cell** create_new_state(Cell** grid, int dimension)
 {
     Cell** new_grid_state = initialize_grid(dimension);
 
-    for(int i = 0; i < dimension; i++)
-    {
-        for(int j = 0; j < dimension; j++)
-        {
+    int directions[8][2] = {
+        {-1, -1}, {-1, 0}, {-1, 1},
+        {0, -1},          {0, 1},
+        {1, -1}, {1, 0}, {1, 1}
+    };
+
+    for (int i = 0; i < dimension; i++) {
+        for (int j = 0; j < dimension; j++) {
             int neighbours_counter = 0;
 
-            // For neighbours above the line
-            if(i > 0)
-            {
-                if(j > 0)
-                {
-                    if(grid[i-1][j-1].state == LIVE) neighbours_counter++;
-                }
-                
-                if(grid[i-1][j].state == LIVE) neighbours_counter++;
+            for (int d = 0; d < 8; d++) {
+                int ni = i + directions[d][0];
+                int nj = j + directions[d][1];
 
-                if(j + 1 != dimension)
-                {
-                    if(grid[i-1][j+1].state == LIVE) neighbours_counter++;
+                if (ni >= 0 && ni < dimension && nj >= 0 && nj < dimension) {
+                    if (grid[ni][nj].state == LIVE) {
+                        neighbours_counter++;
+                    }
                 }
             }
 
-            if(j>0)
-            {
-                if(grid[i][j-1].state == LIVE) neighbours_counter++; 
-            }
 
-            if(j+1 != dimension)
-            {
-                if(grid[i][j+1].state == LIVE) neighbours_counter++; 
-            }
-
-            // For neighbours under the line
-            if( i+1 != dimension)
-            {
-                if(j > 0)
-                {
-                    if(grid[i+1][j-1].state == LIVE) neighbours_counter++;
-                }
-                
-                if(grid[i+1][j].state == LIVE) neighbours_counter++;
-
-                if(j + 1 != dimension)
-                {
-                    if(grid[i+1][j+1].state == LIVE) neighbours_counter++;
-                }
-            }
-
-            // Calculate it for new_grid_state
             if(grid[i][j].state == LIVE && (neighbours_counter==2 || neighbours_counter==3))
             {
                 new_grid_state[i][j].state = LIVE;
