@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "parallel.h": "c",
+        "serial.h": "c"
+    }
+}
