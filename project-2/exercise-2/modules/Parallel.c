@@ -44,19 +44,18 @@ double* column_algorithm_parallel(double** table_a, double* table_b, int n, int 
     double* table_x;
     table_x = malloc(n * sizeof(double));
 
-    // #pragma omp parallel for num_threads(threads)
-    for(int row = 0; row < n; row++)
-    {
+    #pragma omp parallel for num_threads(threads) schedule(static)
+    for (int row = 0; row < n; row++) {
         table_x[row] = table_b[row];
     }
 
-    // #pragma omp parallel for num_threads(threads)
-    for(int col = n-1; col >= 0; col--)
+    for (int col = n - 1; col >= 0; col--) 
     {
         table_x[col] /= table_a[col][col];
-        for(int row = 0; row < col; row++)
-        {
-            table_x[row] -= table_a[row][col]*table_x[col];
+
+        #pragma omp parallel for num_threads(threads) schedule(static)
+        for (int row = 0; row < col; row++) {
+            table_x[row] -= table_a[row][col] * table_x[col];
         }
     }
     return table_x;
