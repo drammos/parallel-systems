@@ -25,7 +25,7 @@ Cell** create_new_state_parallel(Cell** grid, int dimension, int threads)
         {1, -1}, {1, 0}, {1, 1}    // Below
     };
 
-    #pragma omp parallel for num_threads(threads) collapse(2)
+    #pragma omp parallel for schedule(static) num_threads(threads) collapse(2)
     for (int i = 0; i < dimension; i++) {
         for (int j = 0; j < dimension; j++) {
             int neighbours_counter = 0;
@@ -70,8 +70,6 @@ void parellel_algorithm(int states, int dimension, int threads)
     for(int i = 1; i < states; i++)
     {
         grid = create_new_state_parallel(grid, dimension, threads);
-        // printf("The i= %d\n", i);
-        // print_grid(grid, dimension);
     }
     
 
