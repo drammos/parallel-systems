@@ -13,28 +13,29 @@
 #include <stdint.h>
 
 
-
 double* row_algorithm_parallel(double** table_a, double* table_b, int n, int threads)
 {
-    printf("The n is:%d\n", n);
-    double* table_x;
-    table_x = (double*)malloc(n*sizeof(double));
+    printf("The n is: %d\n", n);
+    double* table_x = (double*)malloc(n * sizeof(double));
 
     if (table_x == NULL) {
         fprintf(stderr, "Memory allocation failed for table_x\n");
         exit(EXIT_FAILURE);
     }
-    
-    #pragma omp parallel for num_threads(threads)
-    for(int row = n-1; row >= 0; row--)
+
+    for (int row = n - 1; row >= 0; row--)
     {
-        table_x[row] = table_b[row];
-        for(int col = row+1; col < n; col++)
+        double temp = table_b[row];
+
+        #pragma omp parallel for num_threads(threads) reduction(-:temp) schedule(static) 
+        for (int col = row + 1; col < n; col++)
         {
-            table_x[row] -= table_a[row][col]*table_x[col];
+            temp -= table_a[row][col] * table_x[col];
         }
-        table_x[row] /= table_a[row][row];
+
+        table_x[row] = temp / table_a[row][row];
     }
+
     return table_x;
 }
 
@@ -43,13 +44,13 @@ double* column_algorithm_parallel(double** table_a, double* table_b, int n, int 
     double* table_x;
     table_x = malloc(n * sizeof(double));
 
-    #pragma omp parallel for num_threads(threads)
+    // #pragma omp parallel for num_threads(threads)
     for(int row = 0; row < n; row++)
     {
         table_x[row] = table_b[row];
     }
 
-    #pragma omp parallel for num_threads(threads)
+    // #pragma omp parallel for num_threads(threads)
     for(int col = n-1; col >= 0; col--)
     {
         table_x[col] /= table_a[col][col];
