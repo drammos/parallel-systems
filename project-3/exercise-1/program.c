@@ -21,8 +21,8 @@ void parallel_algorithm(int states, int dimension);
 
 
 int main(int argc, char** argv) {
-    int dimension = 20;   // Example grid dimension
-    int states = 100;     // Number of iterations
+    int dimension = 10;   // Example grid dimension
+    int states = 5;     // Number of iterations
 
     parallel_algorithm(states, dimension);
 
@@ -41,44 +41,63 @@ void parallel_algorithm(int states, int dimension) {
     // Determine rows per process and handle uneven division
     int rows_per_process = dimension / size;
     int extra_rows = dimension % size;
-
+    int local_rows = rows_per_process + (rank < extra_rows ? 1 : 0);
+    
     int* sendcounts = (int*)malloc(size * sizeof(int));
     int* displs = (int*)malloc(size * sizeof(int));
-    int total_rows = 0;
+    
+    if (!sendcounts || !displs) {
+        fprintf(stderr, "Memory allocation failed\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
 
+    // Calculate send counts and displacements
+    int total_rows = 0;
     for (int i = 0; i < size; i++) {
         sendcounts[i] = (rows_per_process + (i < extra_rows ? 1 : 0)) * dimension;
         displs[i] = total_rows;
         total_rows += sendcounts[i];
     }
 
-    // Local grid size (with ghost rows)
-    int local_rows = rows_per_process + (rank < extra_rows ? 1 : 0);
+    // Allocate local grid with ghost rows
     Cell** local_grid = initialize_grid(local_rows + 2, dimension);
+    if (!local_grid) {
+        free(sendcounts);
+        free(displs);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
 
-    // Root initializes the full grid
+    // Root process initializes and distributes the grid
     Cell** full_grid = NULL;
     if (rank == 0) {
         full_grid = create_grid(dimension);
+        if (!full_grid) {
+            free_grid(local_grid, local_rows + 2);
+            free(sendcounts);
+            free(displs);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
     }
 
-    // Scatter the grid rows
+    // Scatter the grid data
     for (int i = 0; i < local_rows; i++) {
         MPI_Scatterv(
-            rank == 0 ? full_grid[0] : NULL, // Send buffer
-            sendcounts,                      // Send counts
-            displs,                          // Displacements
-            MPI_INT,                         // Data type
-            local_grid[i + 1],               // Receive buffer (skip ghost rows)
-            sendcounts[rank],                // Receive count
-            MPI_INT,                         // Data type
-            0,                               // Root
-            MPI_COMM_WORLD                   // Communicator
+            rank == 0 ? &(full_grid[0][0].state) : NULL,
+            sendcounts,
+            displs,
+            MPI_INT,
+            &(local_grid[i + 1][0].state),
+            sendcounts[rank],
+            MPI_INT,
+            0,
+            MPI_COMM_WORLD
         );
     }
 
+    // Free full grid after scattering
     if (rank == 0) {
         free_grid(full_grid, dimension);
+        full_grid = NULL;
     }
 
     struct timespec start_time, end_time;
@@ -94,18 +113,50 @@ void parallel_algorithm(int states, int dimension) {
 
     for (int state = 0; state < states; state++) {
         // Exchange ghost rows
-        if (rank > 0) {
-            MPI_Send(local_grid[1], dimension, MPI_INT, rank - 1, 0, MPI_COMM_WORLD);
-            MPI_Recv(local_grid[0], dimension, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if (rank % 2 != 0) {
+            // Even-ranked processes
+            // Send up, then receive from up
+            if (rank > 0) {
+                MPI_Send(&(local_grid[1][0].state), dimension, MPI_INT, rank - 1, 0, MPI_COMM_WORLD);
+                MPI_Recv(&(local_grid[0][0].state), dimension, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+            // Send down, then receive from down
+            if (rank < size - 1) {
+                MPI_Send(&(local_grid[local_rows][0].state), dimension, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
+                MPI_Recv(&(local_grid[local_rows + 1][0].state), dimension, MPI_INT, rank + 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
         }
-        if (rank < size - 1) {
-            MPI_Send(local_grid[local_rows], dimension, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
-            MPI_Recv(local_grid[local_rows + 1], dimension, MPI_INT, rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        else {
+            // Odd-ranked processes
+            // Receive from up, then send up
+            if (rank > 0) {
+                MPI_Recv(&(local_grid[0][0].state), dimension, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Send(&(local_grid[1][0].state), dimension, MPI_INT, rank - 1, 0, MPI_COMM_WORLD);
+            }
+            // Receive from down, then send down
+            if (rank < size - 1) {
+                MPI_Recv(&(local_grid[local_rows + 1][0].state), dimension, MPI_INT, rank + 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Send(&(local_grid[local_rows][0].state), dimension, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
+            }
+        }
+
+        // Allocate new grid for next state
+        Cell** new_local_grid = initialize_grid(local_rows + 2, dimension);
+        if (!new_local_grid) {
+            free_grid(local_grid, local_rows + 2);
+            free(sendcounts);
+            free(displs);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+
+        // Initialize new grid to DEAD state
+        for (int i = 0; i < local_rows + 2; i++) {
+            for (int j = 0; j < dimension; j++) {
+                new_local_grid[i][j].state = DEAD;
+            }
         }
 
         // Compute new state
-        Cell** new_local_grid = initialize_grid(local_rows + 2, dimension);
-
         for (int i = 1; i <= local_rows; i++) {
             for (int j = 0; j < dimension; j++) {
                 int neighbors = 0;
@@ -127,43 +178,59 @@ void parallel_algorithm(int states, int dimension) {
             }
         }
 
+        // Free old grid and update pointer
         free_grid(local_grid, local_rows + 2);
         local_grid = new_local_grid;
     }
 
-    // Gather results at the root
+    // Gather final results
+    Cell** final_grid = NULL;
     if (rank == 0) {
-        Cell** full_grid = initialize_grid(dimension, dimension);
+        final_grid = initialize_grid(dimension, dimension);
+        if (!final_grid) {
+            free_grid(local_grid, local_rows + 2);
+            free(sendcounts);
+            free(displs);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+    }
 
+    // Gather results
+    if (rank == 0) {
+        // Copy local results
         for (int i = 0; i < local_rows; i++) {
-            memcpy(full_grid[i], local_grid[i + 1], dimension * sizeof(Cell));
+            memcpy(&(final_grid[i][0].state), &(local_grid[i + 1][0].state), dimension * sizeof(Cell));
         }
 
+        // Receive from other processes
         for (int p = 1; p < size; p++) {
-            for (int i = 0; i < sendcounts[p] / dimension; i++) {
-                MPI_Recv(full_grid[displs[p] / dimension + i], dimension, MPI_INT, p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            int proc_rows = rows_per_process + (p < extra_rows ? 1 : 0);
+            int start_row = displs[p] / dimension;
+            
+            for (int i = 0; i < proc_rows; i++) {
+                MPI_Recv(&(final_grid[start_row + i][0].state), dimension, MPI_INT, 
+                        p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
         }
 
         clock_gettime(CLOCK_MONOTONIC, &end_time);
         double elapsed_time = (end_time.tv_sec - start_time.tv_sec) + 
-                              (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
+                            (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
         printf("The time for Parallel-Solution is: %f seconds\n", elapsed_time);
 
-        print_grid(full_grid, dimension);
-        free_grid(full_grid, dimension);
+        print_grid(final_grid, dimension);
+        free_grid(final_grid, dimension);
     } else {
+        // Send local results to root
         for (int i = 1; i <= local_rows; i++) {
-            MPI_Send(local_grid[i], dimension, MPI_INT, 0, 0, MPI_COMM_WORLD);
+            MPI_Send(&(local_grid[i][0].state), dimension, MPI_INT, 0, 0, MPI_COMM_WORLD);
         }
     }
 
+    // Cleanup
+    free_grid(local_grid, local_rows + 2);
     free(sendcounts);
     free(displs);
-    free_grid(local_grid, local_rows + 2);
-    if (rank == 0)
-    {
-        free_grid(full_grid, dimension);
-    }
+
     MPI_Finalize();
 }

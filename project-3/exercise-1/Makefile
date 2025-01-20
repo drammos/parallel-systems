@@ -16,7 +16,7 @@ OBJS = program.o $(MODULES)/MPI.o $(MODULES)/Grid.o
 EXEC = program
 
 # Parameters for running the program
-ARGS = 1000 64
+ARGS = 100 64
 
 $(EXEC): $(OBJS)
 	mpicc $(OBJS) -o $(EXEC)
