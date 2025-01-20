@@ -114,58 +114,58 @@ Cell** read_file_rle(Cell** grid, int dimension)
 //     return grid;
 // }
 // Initializes a grid with specified dimensions (rows x cols), filling it with DEAD cells
-Cell** initialize_grid(int rows, int cols) {
-    Cell** grid = malloc(rows * sizeof(Cell*));
-    if (grid == NULL) {
-        perror("Failed to allocate memory for grid");
-        // Abort on allocation failure
-    }
+// Cell** initialize_grid(int rows, int cols) {
+//     Cell** grid = malloc(rows * sizeof(Cell*));
+//     if (grid == NULL) {
+//         perror("Failed to allocate memory for grid");
+//         // Abort on allocation failure
+//     }
 
-    for (int i = 0; i < rows; i++) {
-        grid[i] = malloc(cols * sizeof(Cell));
-        if (grid[i] == NULL) {
-            perror("Failed to allocate memory for grid row");
-            for (int j = 0; j < i; j++) { // Free already allocated rows
-                free(grid[j]);
-            }
-            free(grid);
+//     for (int i = 0; i < rows; i++) {
+//         grid[i] = malloc(cols * sizeof(Cell));
+//         if (grid[i] == NULL) {
+//             perror("Failed to allocate memory for grid row");
+//             for (int j = 0; j < i; j++) { // Free already allocated rows
+//                 free(grid[j]);
+//             }
+//             free(grid);
             
-        }
-        // Initialize all cells to DEAD
-        for (int j = 0; j < cols; j++) {
-            grid[i][j].state = DEAD;
-        }
-    }
-    return grid;
-}
+//         }
+//         // Initialize all cells to DEAD
+//         for (int j = 0; j < cols; j++) {
+//             grid[i][j].state = DEAD;
+//         }
+//     }
+//     return grid;
+// }
 
-void free_grid(Cell** grid, int rows) {
-    if (grid) {
-        for (int i = 0; i < rows; i++) {
-            if (grid[i]) {
-                free(grid[i]);
-            }
-        }
-        free(grid);
-    }
-}
+// void free_grid(Cell** grid, int rows) {
+//     if (grid) {
+//         for (int i = 0; i < rows; i++) {
+//             if (grid[i]) {
+//                 free(grid[i]);
+//             }
+//         }
+//         free(grid);
+//     }
+// }
 
-// Reads an RLE file and populates the grid
-Cell** create_grid(int dimension) {
-    Cell** grid = initialize_grid(dimension, dimension);    
-    return read_file_rle(grid, dimension);
-}
+// // Reads an RLE file and populates the grid
+// Cell** create_grid(int dimension) {
+//     Cell** grid = initialize_grid(dimension, dimension);    
+//     return read_file_rle(grid, dimension);
+// }
 
 
-// Prints the grid to the console
-void print_grid(Cell** grid, int dimension) {
-    for (int i = 0; i < dimension; i++) {
-        for (int j = 0; j < dimension; j++) {
-            printf("%c", (grid[i][j].state == LIVE) ? 'O' : '.');
-        }
-        printf("\n");
-    }
-}
+// // Prints the grid to the console
+// void print_grid(Cell** grid, int dimension) {
+//     for (int i = 0; i < dimension; i++) {
+//         for (int j = 0; j < dimension; j++) {
+//             printf("%c", (grid[i][j].state == LIVE) ? 'O' : '.');
+//         }
+//         printf("\n");
+//     }
+// }
 
 // Cell** create_grid(int dimension)
 // {
