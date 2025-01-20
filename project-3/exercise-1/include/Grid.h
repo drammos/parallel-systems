@@ -12,7 +12,7 @@ struct cell{
 
 Cell** create_grid(int dimension);
 
-Cell** initialize_grid(int dimension);
+Cell** initialize_grid(int rows, int cols);
 
 void print_grid(Cell** grid, int dimension);
 

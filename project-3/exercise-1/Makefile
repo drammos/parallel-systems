@@ -11,6 +11,7 @@ INCL = $(INCLUDE)/includes.h $(INCLUDE)/MPI.h $(INCLUDE)/Grid.h
 # Object files
 OBJS = program.o $(MODULES)/MPI.o $(MODULES)/Grid.o
 
+
 # Executable program
 EXEC = program
 
