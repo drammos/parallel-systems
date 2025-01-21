@@ -29,7 +29,7 @@ clean:
 	rm -f $(OBJS) $(EXEC)
 
 run: $(EXEC)
-	mpiexec -n 4 ./$(EXEC) $(ARGS)
+	mpiexec -n 2 ./$(EXEC) $(ARGS)
 
 gdb: $(OBJS)
 	mpicc $(OBJS) -g3 -o $(EXEC)
