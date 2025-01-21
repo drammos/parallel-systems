@@ -6,17 +6,17 @@ FILES = files
 CFLAGS = -g -Wall -I$(INCLUDE)
 
 # Αρχεία .o
-INCL = $(INCLUDE)/includes.h $(INCLUDE)/MPI.h $(INCLUDE)/Grid.h
+INCL = $(INCLUDE)/includes.h
 
 # Object files
-OBJS = program.o $(MODULES)/MPI.o $(MODULES)/Grid.o
+OBJS = program.o
 
 
 # Executable program
 EXEC = program
 
 # Parameters for running the program
-ARGS = 100 64
+ARGS = 1000 64
 
 $(EXEC): $(OBJS)
 	mpicc $(OBJS) -o $(EXEC)

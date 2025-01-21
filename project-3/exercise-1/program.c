@@ -28,24 +28,28 @@ void print_grid(int* grid, int rows, int cols) {
 }
 
 int main(int argc, char** argv) {
-    int rank, size, dimension = 2000;
-    const int iterations = 5;
+    //Size is a num_of_process
+    int rank, size;
     
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     
-    // Calculate local rows for each process
+    int dimension = atoi(argv[1]);
+    int states = atoi(argv[2]);
+    double start_time = MPI_Wtime();
+    // Find the local_rows for its rank
     int local_rows = dimension / size;
     if (rank < dimension % size) local_rows++;
     
-    // Allocate arrays for process distribution info
+    // Initialize 
     int* rows_per_process = NULL;
     int* displacement = NULL;
     int* sendcounts = NULL;
     int* displs = NULL;
     
     if (rank == 0) {
+        //malloc
         rows_per_process = (int*)malloc(size * sizeof(int));
         displacement = (int*)malloc(size * sizeof(int));
         sendcounts = (int*)malloc(size * sizeof(int));
@@ -62,18 +66,18 @@ int main(int argc, char** argv) {
         }
     }
     
-    // Allocate local grids (including ghost rows)
+    // Create local & new_local grid
+    // The grid_size have size (local_rows + 2) 
+    // for bottom and Top row
     int grid_size = (local_rows + 2) * dimension;
     int* local_grid = (int*)malloc(grid_size * sizeof(int));
     int* new_local_grid = (int*)malloc(grid_size * sizeof(int));
     
-    // Initialize full grid in root process
+    // Initialize full grid
     int* full_grid = NULL;
     if (rank == 0) {
         full_grid = (int*)malloc(dimension * dimension * sizeof(int));
         initialize_grid(full_grid, dimension, dimension);
-        printf("Initial grid:\n");
-        print_grid(full_grid, dimension, dimension);
     }
     
     // Scatter the initial grid
@@ -81,7 +85,7 @@ int main(int argc, char** argv) {
                  local_grid + dimension, local_rows * dimension, MPI_INT,
                  0, MPI_COMM_WORLD);
     
-    for (int iter = 0; iter < iterations; iter++) {
+    for (int iter = 0; iter < states; iter++) {
         MPI_Request requests[4];
         MPI_Status statuses[4];
         int req_count = 0;
@@ -133,7 +137,7 @@ int main(int argc, char** argv) {
                 
                 // Apply Game of Life rules
                 int curr_state = local_grid[IDX(i, j, dimension)];
-                new_local_grid[IDX(i, j, dimension)] = DEAD;  // Default to dead
+                new_local_grid[IDX(i, j, dimension)] = DEAD;  
                 
                 if (curr_state == LIVE) {
                     if (neighbors == 2 || neighbors == 3) {
@@ -145,7 +149,7 @@ int main(int argc, char** argv) {
             }
         }
         
-        // Swap grids using pointer swap (very efficient)
+        // Copy the local_grid at new_local_grid
         int* temp = local_grid;
         local_grid = new_local_grid;
         new_local_grid = temp;
@@ -154,14 +158,9 @@ int main(int argc, char** argv) {
         MPI_Gatherv(local_grid + dimension, local_rows * dimension, MPI_INT,
                     full_grid, sendcounts, displs, MPI_INT,
                     0, MPI_COMM_WORLD);
-
-        if (rank == 0) {
-            // printf("Grid after iteration %d:\n", iter + 1);
-            // print_grid(full_grid, dimension, dimension);
-        }
     }
     
-    // Cleanup
+    // Free the memory
     free(local_grid);
     free(new_local_grid);
     
@@ -171,6 +170,9 @@ int main(int argc, char** argv) {
         free(displacement);
         free(sendcounts);
         free(displs);
+        double end_time = MPI_Wtime();
+   
+        printf("Elapsed time: %f seconds\n", end_time - start_time);
     }
     
     MPI_Finalize();
