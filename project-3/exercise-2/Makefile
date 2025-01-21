@@ -1,31 +1,36 @@
-# paths
-# MODULES = ../modules
-INCLUDE = ../include
-FILES = ../Input
+# MODULES = modules
+# INCLUDE = include
+# FILES = files
 
 # Compile options. Το -I<dir> λέει στον compiler να αναζητήσει εκεί include files
-CFLAGS = -Wall -no-pie -fPIE -g -I$(INCLUDE)
+CFLAGS = -g -Wall # -I$(INCLUDE)
 
 # Αρχεία .o
-INCL = $(INCLUDE)/includes.h 
-OBJS = program.o 
+# INCL = $(INCLUDE)/includes.h
 
-# the executable program
+# Object files
+OBJS = program.o
+
+
+# Executable program
 EXEC = program
 
-# parameters
-ARGS = 10000 10
+# Parameters for running the program
+ARGS = 4
 
-$(EXEC) $(EXEC1): $(OBJS) $(INCL)
-	gcc -lpthread -pthread $(OBJS) -o $(EXEC) -lrt
+$(EXEC): $(OBJS)
+	mpicc $(OBJS) -o $(EXEC)
+
+# Rule to build object files
+%.o: %.c 
+	mpicc $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(EXEC) $(OBJS1) $(EXEC1)
-
+	rm -f $(OBJS) $(EXEC)
 
 run: $(EXEC)
-	./$(EXEC) $(ARGS)
+	mpiexec -n 4 ./$(EXEC) $(ARGS)
 
 gdb: $(OBJS)
-	g++ $(OBJS) -g3 -o $(EXEC)
+	mpicc $(OBJS) -g3 -o $(EXEC)
 	gdb $(EXEC)
