@@ -61,7 +61,6 @@ int main(int argc, char *argv[])
     int my_rank;
     int comm_sz;
 
-    // Full matrix and Vector
     double *matrix = NULL;
     double *vector = NULL;
 
@@ -71,10 +70,10 @@ int main(int argc, char *argv[])
     double *local_matrix;
     double *local_result;
 
-    double t_init_start, t_init_end;
-    double t_dist_start, t_dist_end;
-    double t_comp_start, t_comp_end;
-    double t_gather_start, t_gather_end;
+    double t_init_local, t_dist_local, t_comp_local, t_gather_local;
+
+    double t_init_avg, t_dist_avg, t_comp_avg, t_gather_avg;
+    double start_time, end_time;
 
     MPI_Datatype column_type, col;
     
@@ -96,9 +95,8 @@ int main(int argc, char *argv[])
     {
         printf("Processes: %d\nMatrix:%dx%d\nVector: 1x%d\n\n", comm_sz, n, n, n);
     }
-    double start_time = MPI_Wtime();
+
     
-    // Check the comm_sz for nXn-table
     if (n % comm_sz != 0) {
         if (my_rank == 0) {
             printf("Matrix size must be divisible by number of processes\n");
@@ -108,9 +106,8 @@ int main(int argc, char *argv[])
     }
 
 
-    t_init_start = MPI_Wtime();
+    start_time = MPI_Wtime();
 
-    // Calculate local sizes
     int local_cols = n / comm_sz;
     int local_size = n * local_cols;
 
@@ -129,10 +126,11 @@ int main(int argc, char *argv[])
         // print_vector(vector, n, "Input Vector");
     }
     
-    t_init_end = MPI_Wtime();
+    end_time = MPI_Wtime();
+    t_init_local = end_time - start_time;
 
 
-    t_dist_start = MPI_Wtime();
+    start_time = MPI_Wtime();
 
     MPI_Type_vector(n, local_cols, n, MPI_DOUBLE, &col);
     MPI_Type_commit(&col);
@@ -142,8 +140,8 @@ int main(int argc, char *argv[])
     MPI_Scatter(matrix, 1, column_type, local_matrix, local_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     MPI_Bcast(vector, n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    t_dist_end = MPI_Wtime();
-
+    end_time = MPI_Wtime();
+    t_dist_local = end_time - start_time ;
     // // If rank == 0
     // if (my_rank == 0) {
     //     // Send columns (local_matrix) to other proc
@@ -165,7 +163,7 @@ int main(int argc, char *argv[])
     // }
 
 
-    t_comp_start = MPI_Wtime();
+    start_time = MPI_Wtime();
 
     for (int i = 0; i < n; i++) {
         local_result[i] = 0.0;
@@ -173,9 +171,10 @@ int main(int argc, char *argv[])
             local_result[i] += local_matrix[i * local_cols + j] * vector[j + my_rank * local_cols];
         }
     }
-    t_comp_end = MPI_Wtime();
+    end_time = MPI_Wtime();
+    t_comp_local = end_time - start_time;
 
-    t_gather_start = MPI_Wtime();
+    start_time = MPI_Wtime();
 
     if (my_rank == 0) {
         result = (double *)malloc(n * sizeof(double));
@@ -183,20 +182,28 @@ int main(int argc, char *argv[])
 
     MPI_Reduce(local_result, result, n, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
-    t_gather_end = MPI_Wtime();
+    end_time = MPI_Wtime();
+    t_gather_local = end_time - start_time;
+
+    MPI_Reduce(&t_init_local, &t_init_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&t_dist_local, &t_dist_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&t_comp_local, &t_comp_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&t_gather_local, &t_gather_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (my_rank == 0) {
+        t_init_avg /= comm_sz;
+        t_dist_avg /= comm_sz;
+        t_comp_avg /= comm_sz;
+        t_gather_avg /= comm_sz;
+
         // print_vector(result, n, "Result Vector");
-        printf("Timing Results:\n");
-        printf("Initialization time: %f seconds\n", t_init_end - t_init_start);
-        printf("Distribution time:   %f seconds\n", t_dist_end - t_dist_start);
-        printf("Computation time:    %f seconds\n", t_comp_end - t_comp_start);
-        printf("Gathering time:      %f seconds\n", t_gather_end - t_gather_start);
+        printf("Average Timing Results:\n");
+        printf("Initialization time: %f seconds\n", t_init_avg);
+        printf("Distribution time:   %f seconds\n", t_dist_avg);
+        printf("Computation time:    %f seconds\n", t_comp_avg);
+        printf("Gathering time:      %f seconds\n", t_gather_avg);
         printf("Total time:          %f seconds\n", 
-               (t_init_end - t_init_start) + 
-               (t_dist_end - t_dist_start) + 
-               (t_comp_end - t_comp_start) + 
-               (t_gather_end - t_gather_start));
+               t_init_avg + t_dist_avg + t_comp_avg + t_gather_avg);
     }
 
     MPI_Type_free(&column_type);
