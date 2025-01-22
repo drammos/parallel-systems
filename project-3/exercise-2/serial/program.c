@@ -50,6 +50,7 @@ int main(int argc, char* argv[])
     }
 
     int n = atoi(argv[1]);
+    printf("Matrix:%dx%d\nVector: 1x%d\n\n", n, n, n);
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
 

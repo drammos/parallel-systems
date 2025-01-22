@@ -35,8 +35,12 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     
-    int dimension = atoi(argv[1]);
-    int states = atoi(argv[2]);
+    int states = atoi(argv[1]);
+    int dimension = atoi(argv[2]);
+    if(rank == 0) 
+    {
+        printf("Processes: %d\nGenerations: %d\nGrid:%dx%d\n\n", size,states, dimension, dimension);
+    }
     double start_time = MPI_Wtime();
     // Find the local_rows for its rank
     int local_rows = dimension / size;

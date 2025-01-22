@@ -86,6 +86,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     n = atoi(argv[1]);
+
+    if(my_rank == 0) 
+    {
+        printf("Processes: %d\nMatrix:%dx%d\nVector: 1x%d\n\n", comm_sz, n, n, n);
+    }
     double start_time = MPI_Wtime();
     
     // Check the comm_sz for nXn-table
