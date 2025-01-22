@@ -7,7 +7,7 @@ OBJS = program.o
 
 EXEC = program
 
-ARGS = 8
+ARGS = 16000
 
 $(EXEC): $(OBJS)
 	mpicc $(OBJS) -o $(EXEC)
@@ -20,7 +20,7 @@ clean:
 	rm -f $(OBJS) $(EXEC)
 
 run: $(EXEC)
-	mpiexec -n 4 ./$(EXEC) $(ARGS)
+	mpiexec -f ../../machines -n 4 ./$(EXEC) $(ARGS)
 
 gdb: $(OBJS)
 	mpicc $(OBJS) -g3 -o $(EXEC)

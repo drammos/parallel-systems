@@ -124,9 +124,9 @@ int main(int argc, char *argv[])
         initialize_vector(vector, n);
         
         // Print
-        printf("Initial data:\n");
-        print_matrix(matrix, n, n);
-        print_vector(vector, n, "Input Vector");
+        // printf("Initial data:\n");
+        // print_matrix(matrix, n, n);
+        // print_vector(vector, n, "Input Vector");
     }
     
     t_init_end = MPI_Wtime();
@@ -186,8 +186,7 @@ int main(int argc, char *argv[])
     t_gather_end = MPI_Wtime();
 
     if (my_rank == 0) {
-        print_vector(result, n, "Result Vector");
-        print_vector(result, n, "Result Vector");
+        // print_vector(result, n, "Result Vector");
         printf("Timing Results:\n");
         printf("Initialization time: %f seconds\n", t_init_end - t_init_start);
         printf("Distribution time:   %f seconds\n", t_dist_end - t_dist_start);
