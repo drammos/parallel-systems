@@ -7,7 +7,7 @@ OBJS = program.o
 
 EXEC = program
 
-ARGS = 16000
+ARGS = 16
 
 $(EXEC): $(OBJS)
 	mpicc $(OBJS) -o $(EXEC)

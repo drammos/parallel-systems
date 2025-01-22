@@ -213,9 +213,6 @@ int main(int argc, char *argv[])
     if (my_rank == 0) {
         free(matrix);
         free(result);
-        double end_time = MPI_Wtime();
-   
-        printf("Elapsed time: %f seconds\n", end_time - start_time);
     }
 
     MPI_Finalize();
