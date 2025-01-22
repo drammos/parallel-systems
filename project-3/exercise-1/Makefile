@@ -12,16 +12,14 @@ INCL = $(INCLUDE)/includes.h
 OBJS = program.o
 
 
-# Executable program
 EXEC = program
 
-# Parameters for running the program
 ARGS = 1000 64
 
 $(EXEC): $(OBJS)
 	mpicc $(OBJS) -o $(EXEC)
 
-# Rule to build object files
+#Build object files
 %.o: %.c $(INCL)
 	mpicc $(CFLAGS) -c $< -o $@
 
