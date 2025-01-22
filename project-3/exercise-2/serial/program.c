@@ -44,6 +44,8 @@ void print_vector(double *vector, int size, const char *name) {
 
 int main(int argc, char* argv[])
 {   
+    srand(time(NULL));
+
     if (argc != 2) {
         printf("Usage: %s n\n", argv[0]);
         return 1;
@@ -54,7 +56,6 @@ int main(int argc, char* argv[])
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
 
-    // Full matrix and Vector
     double *matrix = NULL;
     double *vector = NULL;
     double *result;
@@ -62,19 +63,16 @@ int main(int argc, char* argv[])
     vector = (double *)malloc(n * sizeof(double));
 
 
-    // Allocate and initialization
     allocate_matrix(&matrix, n, n);
     initialize_matrix(matrix, n, n);
     initialize_vector(vector, n);
 
 
-    // Print Matrix and Vector
-    printf("Initial data:\n");
-    print_matrix(matrix, n, n);
-    print_vector(vector, n, "Input Vector");
+    // printf("Initial data:\n");
+    // print_matrix(matrix, n, n);
+    // print_vector(vector, n, "Input Vector");
 
 
-    // Computation for serial
     for(int i = 0; i < n; i++){
         result[i] = 0.0;
         for(int j = 0; j < n; j++)
@@ -83,7 +81,7 @@ int main(int argc, char* argv[])
         }
     }    
 
-    print_vector(result, n, "Result Vector");
+    // print_vector(result, n, "Result Vector");
 
     clock_gettime(CLOCK_MONOTONIC, &end); 
     double elapsed_time = (end.tv_sec - start.tv_sec) + 

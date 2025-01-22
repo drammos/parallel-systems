@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
 {
     
     int n;
+    srand(time(NULL));
 
 
     int my_rank;
