@@ -52,26 +52,31 @@ void print_local_matrix(double *local_matrix, int rows, int local_cols, int rank
 }
 
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     
-    // n is dismension for table
     int n;
 
-    // my_rank and comm_sz from MPI
+
     int my_rank;
     int comm_sz;
 
     // Full matrix and Vector
     double *matrix = NULL;
     double *vector = NULL;
-    // Full Result for process 0
+
     double *result;
 
-    // Local matrix & result
+
     double *local_matrix;
     double *local_result;
 
-    MPI_Datatype column_type;
+    double t_init_start, t_init_end;
+    double t_dist_start, t_dist_end;
+    double t_comp_start, t_comp_end;
+    double t_gather_start, t_gather_end;
+
+    MPI_Datatype column_type, col;
     
 
     MPI_Init(&argc, &argv);
@@ -102,6 +107,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+
+    t_init_start = MPI_Wtime();
+
     // Calculate local sizes
     int local_cols = n / comm_sz;
     int local_size = n * local_cols;
@@ -110,7 +118,6 @@ int main(int argc, char *argv[]) {
     allocate_matrix(&local_result, n, 1);
     vector = (double *)malloc(n * sizeof(double));
 
-    // Process 0 initializes the full matrix and vector
     if (my_rank == 0) {
         allocate_matrix(&matrix, n, n);
         initialize_matrix(matrix, n, n);
@@ -122,64 +129,77 @@ int main(int argc, char *argv[]) {
         print_vector(vector, n, "Input Vector");
     }
     
-    // Create MPI vector type for distributing columns
-    MPI_Type_vector(n, local_cols, n, MPI_DOUBLE, &column_type);
+    t_init_end = MPI_Wtime();
+
+
+    t_dist_start = MPI_Wtime();
+
+    MPI_Type_vector(n, local_cols, n, MPI_DOUBLE, &col);
+    MPI_Type_commit(&col);
+    MPI_Type_create_resized(col, 0, local_cols * sizeof(double), &column_type);
     MPI_Type_commit(&column_type);
 
-    // Broadcast vector to all processes
+    MPI_Scatter(matrix, 1, column_type, local_matrix, local_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
     MPI_Bcast(vector, n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    t_dist_end = MPI_Wtime();
 
-    // If rank == 0
-    if (my_rank == 0) {
-        // Send columns (local_matrix) to other proc
-        for (int dest = 1; dest < comm_sz; dest++) {
-            MPI_Send(&matrix[dest * local_cols], 1, column_type, dest, 0, MPI_COMM_WORLD);
-        }
+    // // If rank == 0
+    // if (my_rank == 0) {
+    //     // Send columns (local_matrix) to other proc
+    //     for (int dest = 1; dest < comm_sz; dest++) {
+    //         MPI_Send(&matrix[dest * local_cols], 1, column_type, dest, 0, MPI_COMM_WORLD);
+    //     }
 
-        // Create local_matrix for process = 0
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < local_cols; j++) {
-                local_matrix[i * local_cols + j] = matrix[i * n + j];
-            }
-        }
-    } 
-    else 
-    {
-        // Receive columns from process 0 for the local_matrix
-        MPI_Recv(local_matrix, local_size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    }
+    //     // Create local_matrix for process = 0
+    //     for (int i = 0; i < n; i++) {
+    //         for (int j = 0; j < local_cols; j++) {
+    //             local_matrix[i * local_cols + j] = matrix[i * n + j];
+    //         }
+    //     }
+    // } 
+    // else 
+    // {
+    //     // Receive columns from process 0 for the local_matrix
+    //     MPI_Recv(local_matrix, local_size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    // }
 
-    // Print local_matrix
-    MPI_Barrier(MPI_COMM_WORLD);
-    for (int i = 0; i < comm_sz; i++) {
-        if (my_rank == i) {
-            print_local_matrix(local_matrix, n, local_cols, my_rank);
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-    }
 
-    // Compution the local_result for every process
+    t_comp_start = MPI_Wtime();
+
     for (int i = 0; i < n; i++) {
         local_result[i] = 0.0;
         for (int j = 0; j < local_cols; j++) {
             local_result[i] += local_matrix[i * local_cols + j] * vector[j + my_rank * local_cols];
         }
     }
+    t_comp_end = MPI_Wtime();
 
-    // Allocate memory
+    t_gather_start = MPI_Wtime();
+
     if (my_rank == 0) {
         result = (double *)malloc(n * sizeof(double));
     }
 
-    // Reduce local results for final result
     MPI_Reduce(local_result, result, n, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
-    // Print result in process 0
+    t_gather_end = MPI_Wtime();
+
     if (my_rank == 0) {
         print_vector(result, n, "Result Vector");
+        print_vector(result, n, "Result Vector");
+        printf("Timing Results:\n");
+        printf("Initialization time: %f seconds\n", t_init_end - t_init_start);
+        printf("Distribution time:   %f seconds\n", t_dist_end - t_dist_start);
+        printf("Computation time:    %f seconds\n", t_comp_end - t_comp_start);
+        printf("Gathering time:      %f seconds\n", t_gather_end - t_gather_start);
+        printf("Total time:          %f seconds\n", 
+               (t_init_end - t_init_start) + 
+               (t_dist_end - t_dist_start) + 
+               (t_comp_end - t_comp_start) + 
+               (t_gather_end - t_gather_start));
     }
 
-    // Free the memory
     MPI_Type_free(&column_type);
     free(vector);
     free(local_matrix);
